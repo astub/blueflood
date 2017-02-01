@@ -78,6 +78,7 @@ public class HttpMetricDataQueryServer {
         router.options("/v2.0/:tenantId/metric_name/search", new HttpOptionsHandler());
         router.options("/v2.0/:tenantId/events/getEvents", new HttpOptionsHandler());
 
+        router.get("/health", new HealthCheckHandler());
         final RouteMatcher finalRouter = router;
 
         log.info("Starting metric data query server (HTTP) on port {}", this.httpQueryPort);

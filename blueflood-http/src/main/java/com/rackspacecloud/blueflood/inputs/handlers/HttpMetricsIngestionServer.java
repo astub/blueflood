@@ -24,6 +24,7 @@ import com.rackspacecloud.blueflood.concurrent.ThreadPoolBuilder;
 import com.rackspacecloud.blueflood.http.DefaultHandler;
 import com.rackspacecloud.blueflood.http.QueryStringDecoderAndRouter;
 import com.rackspacecloud.blueflood.http.RouteMatcher;
+import com.rackspacecloud.blueflood.http.HealthCheckHandler;
 import com.rackspacecloud.blueflood.inputs.processors.BatchWriter;
 import com.rackspacecloud.blueflood.inputs.processors.DiscoveryWriter;
 import com.rackspacecloud.blueflood.inputs.processors.RollupTypeCacher;
@@ -109,6 +110,8 @@ public class HttpMetricsIngestionServer {
         router.post("/v2.0/:tenantId/ingest/aggregated", new HttpAggregatedIngestionHandler(processor, timeout));
         router.post("/v2.0/:tenantId/events", getHttpEventsIngestionHandler());
         router.post("/v2.0/:tenantId/ingest/aggregated/multi", new HttpAggregatedMultiIngestionHandler(processor, timeout));
+
+        router.get("/health", new HealthCheckHandler());
         final RouteMatcher finalRouter = router;
 
         log.info("Starting metrics listener HTTP server on port {}", httpIngestPort);
@@ -181,7 +184,7 @@ public class HttpMetricsIngestionServer {
 
     static class Processor {
         private static int BATCH_SIZE = Configuration.getInstance().getIntegerProperty(CoreConfig.METRIC_BATCH_SIZE);
-        private static int WRITE_THREADS = 
+        private static int WRITE_THREADS =
             Configuration.getInstance().getIntegerProperty(CoreConfig.METRICS_BATCH_WRITER_THREADS); // metrics will be batched into this many partitions.
 
         private final TypeAndUnitProcessor typeAndUnitProcessor;
@@ -190,7 +193,7 @@ public class HttpMetricsIngestionServer {
         private final BatchWriter batchWriter;
         private IncomingMetricMetadataAnalyzer metricMetadataAnalyzer =
             new IncomingMetricMetadataAnalyzer(MetadataCache.getInstance());
-        private int HTTP_MAX_TYPE_UNIT_PROCESSOR_THREADS = 
+        private int HTTP_MAX_TYPE_UNIT_PROCESSOR_THREADS =
             Configuration.getInstance().getIntegerProperty(HttpConfig.HTTP_MAX_TYPE_UNIT_PROCESSOR_THREADS);
         private final Counter bufferedMetrics = Metrics.counter(HttpMetricsIngestionHandler.class, "Buffered Metrics");
         private final TimeValue timeout;
@@ -237,7 +240,7 @@ public class HttpMetricsIngestionServer {
                     new ThreadPoolBuilder().withName("Rollup type persistence").build(),
                     rollupTypeCache);
             rollupTypeCacher.withLogger(log);
-    
+
         }
 
         ListenableFuture<List<Boolean>> apply(MetricsCollection collection) throws Exception {

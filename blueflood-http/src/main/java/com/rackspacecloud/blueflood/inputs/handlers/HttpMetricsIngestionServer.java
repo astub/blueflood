@@ -112,6 +112,7 @@ public class HttpMetricsIngestionServer {
         router.post("/v2.0/:tenantId/ingest/aggregated/multi", new HttpAggregatedMultiIngestionHandler(processor, timeout));
 
         router.get("/health", new HealthCheckHandler());
+        router.head("/health", new HealthCheckHandler());
         final RouteMatcher finalRouter = router;
 
         log.info("Starting metrics listener HTTP server on port {}", httpIngestPort);
